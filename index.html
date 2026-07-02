@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Needle & Know 🪡</title>
+<meta name="theme-color" content="#2d1854">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Needle & Know">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{
+  --bg:#0a0814;--bg2:#110f1e;--card:#181428;--bd:#2a2240;--bd2:#3a3058;
+  --tx:#f0eaff;--tx2:#b8a8d8;--tx3:#6a5890;
+  --P:#7c4fc7;--P2:#a87de8;--P3:#3d2480;
+  --G:#12a37a;--G2:#1dc994;--GL:#0a2018;
+  --gold:#c9a84c;--gold2:#e8c870;
+  --red:#c0392b;--red2:#e05555;
+  --amber:#c47a1a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font-family:-apple-system,'SF Pro Text',sans-serif;min-height:100vh;padding-bottom:2rem}
+
+.header{background:linear-gradient(160deg,#150d28,#0a0814);padding:1.75rem 1.25rem 1rem;border-bottom:1px solid var(--bd)}
+.header-title{font-size:22px;font-weight:800;color:var(--P2);letter-spacing:-.3px}
+.header-sub{font-size:11px;color:var(--tx3);margin-top:3px}
+
+.nav{display:flex;background:var(--bg2);border-bottom:1px solid var(--bd);overflow-x:auto;scrollbar-width:none;position:sticky;top:0;z-index:100}
+.nav::-webkit-scrollbar{display:none}
+.nav-btn{flex-shrink:0;padding:.7rem .85rem;font-size:12px;font-weight:600;color:var(--tx3);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap}
+.nav-btn.active{color:var(--P2);border-bottom-color:var(--P2)}
+
+.sec{display:none;padding:1rem}
+.sec.active{display:block}
+.sec-lbl{font-size:10px;font-weight:700;color:var(--tx3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.65rem;margin-top:.25rem}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:.85rem}
+.btn{border:none;border-radius:10px;padding:.65rem 1rem;font-size:13px;font-weight:700;cursor:pointer;width:100%}
+.btn-p{background:var(--P);color:#fff}
+.btn-g{background:var(--G);color:#fff}
+
+/* QUARTERS */
+.quarter-card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:.85rem;margin-bottom:.5rem}
+.quarter-title{font-size:15px;font-weight:800;color:var(--P2)}
+.class-row{display:flex;justify-content:space-between;align-items:center;padding:.4rem 0;border-bottom:.5px solid var(--bd2)}
+.class-row:last-child{border-bottom:none}
+.class-name{font-size:13px;color:var(--tx)}
+.grade-badge{font-size:12px;font-weight:700;padding:2px 10px;border-radius:8px;min-width:36px;text-align:center}
+
+/* FLASHCARDS */
+.fc-wrap{perspective:1000px;margin-bottom:1rem}
+.fc{width:100%;min-height:200px;position:relative;transform-style:preserve-3d;transition:transform .5s;cursor:pointer;border-radius:16px}
+.fc.flipped{transform:rotateY(180deg)}
+.fc-front,.fc-back{position:absolute;width:100%;min-height:200px;backface-visibility:hidden;border-radius:16px;padding:1.25rem;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+.fc-back{transform:rotateY(180deg)}
+.fc-front{background:linear-gradient(135deg,#1e1436,#150d28);border:1px solid var(--P3)}
+.fc-back{background:linear-gradient(135deg,#0a1e14,#071410);border:1px solid #1a5c3a}
+.fc-char{font-size:56px;line-height:1;margin-bottom:.5rem}
+.fc-label{font-size:11px;color:var(--tx3);margin-bottom:.25rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.fc-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem}
+.fc-counter{font-size:12px;color:var(--tx3)}
+
+/* PDF VIEWER */
+.pdf-list{margin-bottom:.75rem}
+.pdf-item{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:.75rem;margin-bottom:.4rem;display:flex;align-items:center;gap:.75rem;cursor:pointer}
+.pdf-item:active{background:var(--bg2)}
+.pdf-icon{font-size:24px;flex-shrink:0}
+.pdf-name{font-size:13px;font-weight:600;color:var(--tx)}
+.pdf-meta{font-size:11px;color:var(--tx3);margin-top:2px}
+#pdf-frame-wrap{display:none;position:fixed;inset:0;z-index:500;background:var(--bg);flex-direction:column}
+#pdf-frame-wrap.open{display:flex}
+#pdf-frame-header{padding:.75rem 1rem;background:var(--bg2);border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:.75rem;flex-shrink:0}
+#pdf-frame{flex:1;border:none;width:100%;background:#fff}
+
+/* NOTES */
+.note-class-select{width:100%;background:var(--bg2);border:1px solid var(--bd);border-radius:10px;color:var(--tx);padding:.6rem .75rem;font-size:13px;font-family:inherit;margin-bottom:.5rem}
+.note-textarea{width:100%;background:var(--bg2);border:1px solid var(--bd);border-radius:10px;color:var(--tx);padding:.65rem .75rem;font-size:13px;font-family:inherit;line-height:1.6;resize:none;min-height:120px}
+.note-entry{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:.75rem;margin-bottom:.4rem}
+.note-class-tag{font-size:10px;font-weight:700;color:var(--P2);text-transform:uppercase;letter-spacing:.06em}
+.note-date{font-size:10px;color:var(--tx3)}
+.note-text{font-size:13px;color:var(--tx2);margin-top:.3rem;line-height:1.55}
+
+/* HERB CARD */
+.herb-card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:.85rem;margin-bottom:.5rem}
+.herb-name{font-size:14px;font-weight:700;color:var(--tx)}
+.herb-py{font-size:12px;color:var(--P2);font-weight:600}
+.herb-kor{font-size:12px;color:var(--gold2)}
+.herb-cat{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin:.2rem 0}
+.herb-body{font-size:12px;color:var(--tx2);line-height:1.6;margin-top:.4rem;display:none}
+.herb-card.open .herb-body{display:block}
+
+/* HANGUL */
+.hangul-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;margin-bottom:.75rem}
+.hangul-cell{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:.6rem .3rem;text-align:center;cursor:pointer}
+.hangul-cell:active{background:var(--P3)}
+.hangul-char{font-size:26px;color:var(--P2);font-weight:700}
+.hangul-rom{font-size:10px;color:var(--tx3);margin-top:2px}
+.hangul-name{font-size:9px;color:var(--tx3)}
+.phrase-card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:.75rem;margin-bottom:.4rem}
+.phrase-kor{font-size:18px;font-weight:700;color:var(--P2);margin-bottom:.2rem}
+.phrase-rom{font-size:12px;color:var(--tx3)}
+.phrase-eng{font-size:13px;color:var(--tx2);margin-top:.2rem}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">🪡 Needle & Know</div>
+  <div class="header-sub">VUIM D.AcOM 2026–2030 · Student hub</div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="showSec('quarters',this)">📅 Quarters</button>
+  <button class="nav-btn" onclick="showSec('slides',this)">📄 Slides</button>
+  <button class="nav-btn" onclick="showSec('notes',this)">📝 Notes</button>
+  <button class="nav-btn" onclick="showSec('herbs',this)">🌿 Herbs</button>
+  <button class="nav-btn" onclick="showSec('formulas',this)">⚗️ Formulas</button>
+  <button class="nav-btn" onclick="showSec('flashcards',this)">🃏 Flash</button>
+  <button class="nav-btn" onclick="showSec('hangul',this)">한 Hangul</button>
+</div>
+
+<!-- QUARTERS -->
+<div id="sec-quarters" class="sec active">
+  <div class="sec-lbl">Add new quarter</div>
+  <div class="card" style="margin-bottom:.75rem">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem">
+      <div>
+        <div style="font-size:10px;color:var(--tx3);font-weight:600;margin-bottom:.25rem">QUARTER NAME</div>
+        <input id="q-name" type="text" placeholder="e.g. Winter 2026" style="width:100%;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--tx);padding:.45rem .5rem;font-size:12px;font-family:inherit">
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--tx3);font-weight:600;margin-bottom:.25rem">YEAR</div>
+        <input id="q-year" type="number" placeholder="2026" value="2026" style="width:100%;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--tx);padding:.45rem .5rem;font-size:12px;font-family:inherit">
+      </div>
+    </div>
+    <button class="btn btn-p" onclick="addQuarter()">Add Quarter ✓</button>
+  </div>
+
+  <div class="sec-lbl">Add class to quarter</div>
+  <div class="card" style="margin-bottom:.75rem">
+    <div style="margin-bottom:.5rem">
+      <div style="font-size:10px;color:var(--tx3);font-weight:600;margin-bottom:.25rem">QUARTER</div>
+      <select id="class-quarter" class="note-class-select" style="margin-bottom:.35rem"></select>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem">
+      <div>
+        <div style="font-size:10px;color:var(--tx3);font-weight:600;margin-bottom:.25rem">CLASS NAME</div>
+        <input id="class-name" type="text" placeholder="e.g. AC300" style="width:100%;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--tx);padding:.45rem .5rem;font-size:12px;font-family:inherit">
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--tx3);font-weight:600;margin-bottom:.25rem">GRADE</div>
+        <select id="class-grade" style="width:100%;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--tx);padding:.45rem .5rem;font-size:12px;font-family:inherit">
+          <option value="">In Progress</option>
+          <option>A+</option><option>A</option><option>A-</option>
+          <option>B+</option><option>B</option><option>B-</option>
+          <option>C+</option><option>C</option>
+          <option>Pass</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-p" onclick="addClass()">Add Class ✓</button>
+  </div>
+
+  <div class="sec-lbl">Your academic record</div>
+  <div id="quarters-list"></div>
+</div>
+
+<!-- SLIDES PDF VIEWER -->
+<div id="sec-slides" class="sec">
+  <div class="sec-lbl">Pre-loaded — AC300 slides</div>
+  <div class="pdf-list" id="preloaded-pdfs">
+    <div class="pdf-item" onclick="openPDF('https://jc09170307.github.io/needle-and-know/AC300_MOA_HT.pdf','Heart Channel (HT) — AC300')">
+      <div class="pdf-icon">❤️</div>
+      <div><div class="pdf-name">Heart Channel (HT)</div><div class="pdf-meta">AC300 MOA · 16 pages</div></div>
+    </div>
+    <div class="pdf-item" onclick="openPDF('https://jc09170307.github.io/needle-and-know/AC300_MOA_PC.pdf','Pericardium Channel (PC) — AC300')">
+      <div class="pdf-icon">🛡️</div>
+      <div><div class="pdf-name">Pericardium Channel (PC)</div><div class="pdf-meta">AC300 MOA · 18 pages</div></div>
+    </div>
+    <div class="pdf-item" onclick="openPDF('https://jc09170307.github.io/needle-and-know/AC300_MOA_LV.pdf','Liver Channel (LV) — AC300')">
+      <div class="pdf-icon">🌿</div>
+      <div><div class="pdf-name">Liver Channel (LV)</div><div class="pdf-meta">AC300 MOA · 24 pages</div></div>
+    </div>
+    <div class="pdf-item" onclick="openPDF('https://jc09170307.github.io/needle-and-know/AC300_MOA_GOVERNINGDUMAI.pdf','Governing Vessel (Du Mai) — AC300')">
+      <div class="pdf-icon">⚡</div>
+      <div><div class="pdf-name">Governing Vessel (Du Mai)</div><div class="pdf-meta">AC300 MOA · 35 pages</div></div>
+    </div>
+    <div class="pdf-item" onclick="openPDF('https://jc09170307.github.io/needle-and-know/AC300_MOA_REN_CONCEPTION.pdf','Ren / Conception Vessel — AC300')">
+      <div class="pdf-icon">🌊</div>
+      <div><div class="pdf-name">Ren / Conception Vessel</div><div class="pdf-meta">AC300 MOA · 32 pages</div></div>
+    </div>
+  </div>
+
+  <div class="sec-lbl">Open any PDF from your phone</div>
+  <div class="card" style="margin-bottom:.75rem;text-align:center">
+    <div style="font-size:12px;color:var(--tx3);margin-bottom:.65rem">Pick any slide deck, lecture PDF, or study guide from your device</div>
+    <input type="file" id="pdf-picker" accept="application/pdf" style="display:none" onchange="openLocalPDF(this)">
+    <button class="btn btn-p" onclick="document.getElementById('pdf-picker').click()">📂 Open PDF from Device</button>
+  </div>
+
+  <div class="sec-lbl">Saved PDFs</div>
+  <div id="saved-pdfs-list"><div style="font-size:12px;color:var(--tx3);text-align:center;padding:.75rem">No saved PDFs yet — open one above to view</div></div>
+</div>
+
+<!-- PDF FULLSCREEN VIEWER -->
+<div id="pdf-frame-wrap">
+  <div id="pdf-frame-header">
+    <button onclick="closePDF()" style="background:var(--P3);border:none;color:var(--tx);border-radius:8px;padding:.4rem .75rem;font-size:13px;font-weight:700;cursor:pointer">✕ Close</button>
+    <div id="pdf-frame-title" style="font-size:13px;font-weight:600;color:var(--tx);flex:1;margin-left:.5rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+  </div>
+  <iframe id="pdf-frame" src=""></iframe>
+</div>
+
+<!-- NOTES -->
+<div id="sec-notes" class="sec">
+  <div class="sec-lbl">Add note</div>
+  <div class="card" style="margin-bottom:.75rem">
+    <div style="font-size:10px;color:var(--tx3);font-weight:600;margin-bottom:.25rem">CLASS</div>
+    <select id="note-class" class="note-class-select"></select>
+    <div style="font-size:10px;color:var(--tx3);font-weight:600;margin-bottom:.25rem">NOTE</div>
+    <textarea id="note-text" class="note-textarea" placeholder="Key concept, clinical pearl, point location, formula note..."></textarea>
+    <button class="btn btn-p" style="margin-top:.5rem" onclick="saveNote()">Save Note ✓</button>
+  </div>
+
+  <div style="display:flex;gap:.4rem;margin-bottom:.65rem;overflow-x:auto;scrollbar-width:none">
+    <button onclick="filterNotes('all',this)" style="flex-shrink:0;padding:.35rem .75rem;border-radius:20px;border:1px solid var(--P);background:var(--P);color:#fff;font-size:11px;font-weight:600;cursor:pointer">All</button>
+    <div id="note-filter-btns"></div>
+  </div>
+  <div id="notes-list"></div>
+</div>
+
+<!-- HERBS -->
+<div id="sec-herbs" class="sec">
+  <input type="text" id="herb-search" placeholder="Search herbs..." style="width:100%;background:var(--bg2);border:1px solid var(--bd);border-radius:10px;color:var(--tx);padding:.6rem .75rem;font-size:13px;font-family:inherit;margin-bottom:.65rem" oninput="renderHerbs(this.value)">
+  <div id="herbs-list"></div>
+</div>
+
+<!-- FORMULAS -->
+<div id="sec-formulas" class="sec">
+  <div id="formulas-list"></div>
+</div>
+
+<!-- FLASHCARDS -->
+<div id="sec-flashcards" class="sec">
+  <div class="tab-bar" style="display:flex;gap:.4rem;margin-bottom:.75rem">
+    <button onclick="setDeck('hangul',this)" style="flex:1;padding:.5rem;border-radius:10px;border:1px solid var(--P);background:var(--P);color:#fff;font-size:12px;font-weight:600;cursor:pointer">한 Hangul</button>
+    <button onclick="setDeck('herbs',this)" style="flex:1;padding:.5rem;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx3);font-size:12px;font-weight:600;cursor:pointer">🌿 Herbs</button>
+    <button onclick="setDeck('formulas',this)" style="flex:1;padding:.5rem;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx3);font-size:12px;font-weight:600;cursor:pointer">⚗️ Formulas</button>
+  </div>
+  <div class="fc-nav">
+    <button onclick="prevCard()" style="background:var(--card);border:1px solid var(--bd);border-radius:10px;color:var(--tx);padding:.45rem .9rem;font-size:18px;cursor:pointer">‹</button>
+    <div class="fc-counter" id="fc-counter">1 / 1</div>
+    <button onclick="nextCard()" style="background:var(--card);border:1px solid var(--bd);border-radius:10px;color:var(--tx);padding:.45rem .9rem;font-size:18px;cursor:pointer">›</button>
+  </div>
+  <div class="fc-wrap" onclick="flipCard()">
+    <div class="fc" id="flashcard">
+      <div class="fc-front" id="fc-front"></div>
+      <div class="fc-back" id="fc-back"></div>
+    </div>
+  </div>
+  <div style="text-align:center;font-size:11px;color:var(--tx3);margin-top:.35rem">Tap card to flip · swipe or use arrows to navigate</div>
+</div>
+
+<!-- HANGUL -->
+<div id="sec-hangul" class="sec">
+  <div class="tab-bar" style="display:flex;gap:.4rem;margin-bottom:.75rem">
+    <button onclick="showHangul('consonants',this)" style="flex:1;padding:.5rem;border-radius:10px;border:1px solid var(--P);background:var(--P);color:#fff;font-size:12px;font-weight:600;cursor:pointer">자음 Consonants</button>
+    <button onclick="showHangul('vowels',this)" style="flex:1;padding:.5rem;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx3);font-size:12px;font-weight:600;cursor:pointer">모음 Vowels</button>
+    <button onclick="showHangul('phrases',this)" style="flex:1;padding:.5rem;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx3);font-size:12px;font-weight:600;cursor:pointer">💬 Phrases</button>
+  </div>
+  <div id="hangul-content"></div>
+</div>
+
+<script>
+// ── DATA ──
+var HERBS = [
+  {name:"Ge Gen (Kudzu Root)", py:"Gé Gēn", kor:"갈근", cat:"AUD — primary", c:"#0a7a58",
+   use:"Most clinically studied TCM herb for AUD. Puerarin (isoflavone) modulates aldehyde dehydrogenase-2 and GABA-A receptors, directly reducing alcohol craving and intake. Also protects hepatocytes from alcohol-induced oxidative stress and inhibits lipid peroxidation.",
+   dose:"9–15g in decoction · 500mg standardized extract (puerarin 40%+) daily as supplement",
+   ci:"Generally safe. Monitor AST/ALT with extended use given existing liver compromise. No major drug interactions documented.",
+   teach:"Category: Root. Flavor: Sweet, pungent. Nature: Cool. Channels: Spleen, Stomach. Key actions: Releases the muscle layer, raises clear Yang, generates fluids and alleviates thirst, vents measles rash, reduces alcohol toxicity. Tongue: may show coat at Spleen position. Pulse: may be floating at the Yang position."},
+  {name:"Huang Qi (Astragalus Root)", py:"Huáng Qí", kor:"황기", cat:"Spleen / Wei Qi", c:"#12a37a",
+   use:"Tonifies Spleen and Lung Qi, stabilizes Wei Qi (protective energy), lifts Yang, promotes tissue regeneration. Supports liver regeneration post-alcoholic liver disease. Counters the fatigue pattern seen in ADHD + Spleen Qi deficiency. Modern research: immune modulation, adaptogen, anti-fibrotic activity.",
+   dose:"15–30g decoction · 4–6g dried root powder daily · Available as tincture",
+   ci:"Avoid in acute exterior conditions (cold, flu, fever, active infection). Contraindicated in Yin deficiency with fire signs without combining Yin tonics.",
+   teach:"Category: Root. Flavor: Sweet. Nature: Slightly warm. Channels: Lung, Spleen. Key actions: Tonifies Qi and raises Yang, stabilizes the exterior and arrests sweating, promotes urination and reduces edema, promotes tissue regeneration and discharge of pus, tonifies the Blood. Classic pairing: with Dang Gui (1:5 ratio) to tonify Blood from Qi."},
+  {name:"Dang Gui (Angelica sinensis)", py:"Dāng Guī", kor:"당귀", cat:"Blood / Liver", c:"#c04474",
+   use:"Nourishes AND invigorates Blood simultaneously — unique in the materia medica. Liver Blood deficiency pattern: dry eyes, restless sleep, emotional volatility, muscle cramps, irregular or scanty menses. Blood stasis from hepatotoxicity: spider nevi, dark complexion, hypochondriac pain.",
+   dose:"6–12g decoction · Powder in capsules 3–6g daily",
+   ci:"⚠️ Blood-moving — serious caution with platelets at 58. Discuss with supervising practitioner. Avoid with loose stools from Spleen deficiency. Avoid in early pregnancy.",
+   teach:"Category: Root. Flavor: Sweet, pungent, bitter. Nature: Warm. Channels: Liver, Heart, Spleen. Key actions: Tonifies Blood, invigorates Blood and breaks stasis, regulates menstruation, moistens intestines, reduces swelling and expels pus. The tail (Dang Gui Wei) moves Blood. The head (Dang Gui Tou) tonifies Blood. The whole root does both."},
+  {name:"Bai Shao (White Peony Root)", py:"Bái Sháo", kor:"백작약", cat:"Liver Yin / Blood", c:"#6c5fc7",
+   use:"Nourishes Liver Yin and Blood, softens the Liver, calms Liver Yang rising, relieves pain in sinew and muscle. Addresses muscle tension, cramping, spasm (Liver controls sinew). Emotional: the herb of holding — when Liver needs nourishment to stop over-controlling. Pairs with Chai Hu in Chai Hu Shu Gan San: Chai Hu spreads, Bai Shao nourishes.",
+   dose:"6–15g decoction · Higher doses for pain (up to 30g with practitioner guidance)",
+   ci:"Caution in Cold-Damp Spleen pattern (cold limbs, loose stools, white slippery coat). Contraindicated with Li Lu. Do not use with Rou Gui in excess quantities.",
+   teach:"Category: Root. Flavor: Sour, bitter, sweet. Nature: Cool. Channels: Liver, Spleen. Key actions: Nourishes Blood and Yin, astringes Yin, calms Liver Yang, alleviates pain, adjusts Ying and Wei. Paired with Gan Cao (Shao Yao Gan Cao Tang) for cramping and spasm — a clinical pearl for sinew pain."},
+  {name:"Chai Hu (Bupleurum Root)", py:"Chái Hú", kor:"시호", cat:"Liver Qi stagnation", c:"#0a7a58",
+   use:"Primary herb for spreading Liver Qi. Craving surge with emotional trigger, hypochondriac distension, sighing repeatedly, irritability, emotional suppression. Works at the Shao Yang pivot — between exterior and interior, between ascent and descent. The herb that turns the key when the Liver is locked.",
+   dose:"3–9g decoction · Always in formula context — not used alone clinically",
+   ci:"Avoid prolonged solo use (Yin-consuming with extended use). Not for ascending Liver Yang without anchoring herbs (Bai Shao, Mu Li). Avoid in Liver Fire blazing without clearing herbs.",
+   teach:"Category: Root. Flavor: Bitter, pungent. Nature: Cool. Channels: Liver, Gallbladder, Pericardium, Triple Burner. Key actions: Spreads Liver Qi and relieves constraint, resolves Shao Yang disorders and alternating chills/fever, raises Yang Qi, reduces fever. The Shao Yang herb: half interior, half exterior. Classic formula anchor: Xiao Chai Hu Tang, Chai Hu Shu Gan San."},
+  {name:"Fu Ling (Poria)", py:"Fú Líng", kor:"복령", cat:"Spleen / Heart / Shen", c:"#c47a1a",
+   use:"Calms the Shen without sedating. Tonifies Spleen Qi, resolves Dampness. Appears in virtually every major formula relevant to your patterns: Tian Wang Bu Xin Dan, Gui Pi Tang, Bu Zhong Yi Qi Tang. The great diplomat of the materia medica — harmonizes, resolves, grounds.",
+   dose:"9–15g decoction · The white interior (Fu Ling) tonifies. The pink-red layer (Chi Fu Ling) moves Blood. The bark (Fu Ling Pi) reduces edema.",
+   ci:"Generally very safe. Mild diuretic effect. Caution in extreme Yin deficiency without combining Yin tonics.",
+   teach:"Category: Fungal sclerotium (Poria cocos). Flavor: Sweet, bland. Nature: Neutral. Channels: Heart, Spleen, Lung. Key actions: Strengthens Spleen and harmonizes Middle Jiao, transforms phlegm-dampness, calms Shen, promotes urination. Fu Shen (with wood root) specifically targets Heart Shen. One of the Four Gentlemen (Si Junzi Tang)."},
+  {name:"Suan Zao Ren (Jujube Seed)", py:"Suān Zǎo Rén", kor:"산조인", cat:"Heart / Liver — sleep", c:"#1a6fa8",
+   use:"Primary herb for insomnia from Heart Yin and Blood deficiency. The 3am waking (Liver time 1–3am, Kidney time 11pm–1am). Nourishes Heart Blood, anchors the Shen. Also calms anxiety and excessive sweating. Your primary sleep herb — combine with Fu Ling for a simple effective night tea.",
+   dose:"9–18g decoction · Toasted (Chao Suan Zao Ren) for deficiency insomnia. Raw for excess heat insomnia. Powder: 3–6g",
+   ci:"May cause mild drowsiness — appropriate for evening use only. Avoid in Damp-Heat patterns. Monitor if taking other sedating substances.",
+   teach:"Category: Seed. Flavor: Sweet, sour. Nature: Neutral. Channels: Heart, Liver, Gallbladder. Key actions: Nourishes Heart Yin and Blood, calms the Shen, prevents abnormal sweating. Clinical pearl: toasting (frying) increases sedative effect. Raw seed clears heat. This single difference matters clinically."},
+  {name:"Yuan Zhi (Polygala Root)", py:"Yuǎn Zhì", kor:"원지", cat:"Heart / Kidney — Shen", c:"#6c5fc7",
+   use:"Opens the Heart orifices, calms Shen, resolves Phlegm misting the Heart. The ADHD foggy-focus pattern: when Phlegm obstructs the communication channel between Heart and Kidney (the Water-Fire axis). Also for tinnitus, deafness from Kidney deficiency, and carbuncles.",
+   dose:"3–9g decoction · Start at 3g — can irritate gastric mucosa at higher doses",
+   ci:"Avoid in gastric ulcer or gastritis. Start low. Caution in Yin deficiency with fire rising.",
+   teach:"Category: Root bark. Flavor: Acrid, bitter. Nature: Slightly warm. Channels: Heart, Kidney, Lung. Key actions: Calms Shen and clears the mind, opens the Heart orifices, transforms phlegm and dissipates nodules, reduces abscesses. The Heart-Kidney communication herb — when the axis between Water and Fire is blocked."},
+  {name:"He Huan Pi (Mimosa Bark)", py:"Hé Huān Pí", kor:"합환피", cat:"Heart / Liver — emotion", c:"#c04474",
+   use:"Calms Shen from emotional constraint, invigorates Blood mildly, disperses swelling. Grief, depression, restlessness, inability to experience joy, emotional closing-in. Named for the tree that folds its leaves at nightfall — the herb for those who close themselves off from life. The bark calms; the flower (He Huan Hua) is gentler as a tea.",
+   dose:"6–12g bark decoction · 3–6g flower (He Huan Hua) as daily tea",
+   ci:"Avoid in pregnancy. Mild Blood-moving — caution with very low platelets.",
+   teach:"Category: Bark. Flavor: Sweet. Nature: Neutral. Channels: Heart, Liver. Key actions: Calms Shen and relieves constraint, invigorates Blood and dissipates swelling. Distinguishing from other Shen-calming herbs: Fu Ling — bland calming. Suan Zao Ren — nourishing calming. He Huan Pi — moving/releasing calming. Choose based on whether Shen needs nourishment, resolution of damp, or release of constraint."},
+  {name:"Dan Shen (Salvia Root)", py:"Dān Shēn", kor:"단삼", cat:"Heart / Blood stasis", c:"#c0392b",
+   use:"Invigorates Blood, cools Blood, calms Shen. Palpitations, chest constriction, insomnia from Heart Blood stasis, dark complexion, spider nevi, hepatic portal changes. Directly addresses the liver microcirculation compromise in ALD. Said in classical texts to do the work of the Four Substances Formula (Si Wu Tang) alone.",
+   dose:"9–15g decoction · 500–1000mg standardized extract (tanshinone)",
+   ci:"⚠️ Blood-moving — caution with platelets 58. Avoid with Warfarin. Contraindicated with Chuan Wu and Cao Wu. Do not combine with Digoxin.",
+   teach:"Category: Root. Flavor: Bitter. Nature: Cool. Channels: Heart, Pericardium, Liver. Key actions: Invigorates Blood and breaks stasis, cools Blood and reduces carbuncles, nourishes Blood and calms Shen, clears Heat from the Ying level. The preeminent Heart and Blood herb in modern Chinese medicine."},
+  {name:"Gou Qi Zi (Wolfberry)", py:"Gǒu Qǐ Zǐ", kor:"구기자", cat:"Liver / Kidney Yin", c:"#c0392b",
+   use:"Nourishes Liver and Kidney Yin and Jing simultaneously. Supports visual health (Liver opens to the eyes), liver function, reproductive function, adrenal support. One of the gentlest and most appropriate daily tonics for long-term use. The herb you can eat as food.",
+   dose:"Daily: 10–15 berries steeped 5 min, eat the berries. Therapeutic: 9–15g decoction.",
+   ci:"Generally very safe. Mild effect on blood sugar (monitor if diabetic). Avoid excess in Spleen deficiency with diarrhea.",
+   teach:"Category: Fruit (berry). Flavor: Sweet. Nature: Neutral. Channels: Liver, Kidney, Lung. Key actions: Nourishes Liver and Kidney Yin, tonifies Jing and Blood, brightens the eyes. Distinguished from Nü Zhen Zi (another Liver/Kidney tonic) by its warmer nature and stronger Blood-tonifying quality."},
+  {name:"Gan Cao (Licorice Root)", py:"Gān Cǎo", kor:"감초", cat:"All channels — harmonizer", c:"#c47a1a",
+   use:"Harmonizes formulas, moderates the actions of harsh herbs, tonifies Spleen Qi, moistens Lung, clears heat and toxicity. Present in nearly every major formula in your protocol. The diplomat — reduces side effects, coordinates channel actions, extends the reach of other herbs.",
+   dose:"3–6g in formula · 2–3×/week as solo tea · Zhi Gan Cao (honey-fried) for tonifying; Sheng Gan Cao (raw) for clearing heat",
+   ci:"⚠️ MAX 2–3×/week with Lithium — alters Na/K balance (pseudohyperaldosteronism with extended high-dose use). Avoid in edema, hypertension, or Kidney Yin deficiency with fire.",
+   teach:"Category: Root. Flavor: Sweet. Nature: Neutral (raw = slightly cold; honey-fried = warm). Channels: All twelve channels. Key actions: Tonifies Spleen Qi, moistens Lung and stops cough, clears heat and fire toxicity, moderates and harmonizes other herbs. The only herb said to enter all twelve channels. Clinical rule: always specify raw (Sheng) vs. processed (Zhi)."}
+];
+var FORMULAS = [
+  {name:"Ge Hua Jie Cheng Tang",use:"AUD — alcohol accumulation, damp-heat",
+   pat:"Liver/Spleen disharmony from chronic alcohol. Nausea after drinking, bloating, fatigue, foggy thinking.",
+   herbs:"Ge Hua, Bai Dou Kou, Ze Xie, Zhu Ling, Cang Zhu, Fu Ling, Ren Shen, Bai Zhu, Shen Qu, Gan Jiang, Chen Pi, Mu Xiang, Qing Pi",
+   note:"Primary formula for AUD detox and recovery phase. Transforms dampness, harmonizes Liver and Spleen simultaneously."},
+  {name:"Huang Lian Jie Du Tang",use:"AUD — heat toxin, agitation, liver fire",
+   pat:"Liver/GB fire blazing upward: red face, bitter taste, irritability, insomnia, scanty dark urine.",
+   herbs:"Huang Lian 9g, Huang Qin 6g, Huang Bai 6g, Zhi Zi 9g",
+   note:"Strong heat-clearing. Short-term only (5–10 days max). Monitor AST/ALT with your liver baseline."},
+  {name:"Long Dan Xie Gan Tang",use:"AUD — Liver-Gallbladder damp-heat flaring",
+   pat:"Hypochondriac pain, bitter taste, red eyes, dark urine, possible genital itch, headache.",
+   herbs:"Long Dan Cao, Huang Qin, Zhi Zi, Ze Xie, Mu Tong, Che Qian Zi, Sheng Di, Dang Gui, Chai Hu, Gan Cao",
+   note:"⚠️ MAX 10–14 days then 2-week break. Strong draining action — use with caution given FIB-4 4.15."},
+  {name:"Tian Wang Bu Xin Dan",use:"Bipolar II — Heart/Kidney Yin deficiency, insomnia",
+   pat:"Palpitations, anxiety, insomnia with vivid dreams, poor memory, low-grade afternoon fever, dry mouth.",
+   herbs:"Sheng Di, Xuan Shen, Mai Men Dong, Tian Men Dong, Dan Shen, Dang Gui, Ren Shen, Fu Ling, Suan Zao Ren, Bai Zi Ren, Yuan Zhi, Wu Wei Zi, Jie Geng",
+   note:"Primary formula for bipolar depression with Yin deficiency presentation. Long-term use acceptable in moderate doses."},
+  {name:"Gan Mai Da Zao Tang",use:"Bipolar II — Restless Organ disorder, emotional volatility",
+   pat:"Uncontrollable crying or laughing, inability to settle, frequent yawning, restlessness without cause.",
+   herbs:"Gan Cao 9g, Xiao Mai 30g, Da Zao 10 pieces",
+   note:"One of TCM's simplest, most elegant formulas. Remarkable for emotional dysregulation. Food-medicine boundary. Extended use safe."},
+  {name:"Gui Pi Tang",use:"Bipolar II depression — Heart/Spleen deficiency",
+   pat:"Fatigue, palpitations, worry, poor appetite, pallor, disturbed sleep, poor memory, scanty menses.",
+   herbs:"Ren Shen, Huang Qi, Bai Zhu, Fu Ling, Suan Zao Ren, Long Yan Rou, Mu Xiang, Dang Gui, Yuan Zhi, Gan Cao, Sheng Jiang, Da Zao",
+   note:"Addresses the ADHD-fatigue-depression overlap simultaneously. Tonifies Heart and Spleen — treats root, not branch."},
+  {name:"Bu Zhong Yi Qi Tang",use:"Spleen Qi deficiency — fatigue, ADHD brain fog",
+   pat:"Fatigue worse after eating, prolapse sensation, difficulty concentrating, shortness of breath on exertion, poor appetite.",
+   herbs:"Huang Qi 15g, Ren Shen 9g, Bai Zhu 9g, Zhi Gan Cao 6g, Dang Gui 6g, Chen Pi 6g, Sheng Ma 3g, Chai Hu 3g",
+   note:"4–6 week course. Lifts Spleen Yang. Caution: with FIB-4 4.15, monitor for excessive warming. Add Bai Shao if Yin deficiency signs arise."},
+  {name:"Chai Hu Shu Gan San",use:"Liver Qi stagnation — irritability, craving surge",
+   pat:"Hypochondriac distension and pain, sighing, irritability, craving with emotional trigger, PMS.",
+   herbs:"Chai Hu 6g, Bai Shao 9g, Zhi Ke 6g, Chen Pi 6g, Chuan Xiong 4.5g, Xiang Fu 4.5g, Zhi Gan Cao 3g",
+   note:"Your primary pattern formula. 4–6 week course. Pair with LR3 + PC6 acupressure between doses. Cha Cha is this formula's movement equivalent."},
+  {name:"Zhu Ling Tang",use:"Damp-heat in Bladder — edema, liver fluid retention",
+   pat:"Urinary difficulty, edema, thirst with desire to drink but uncomfortable after, possible diarrhea.",
+   herbs:"Zhu Ling 9g, Fu Ling 9g, Ze Xie 9g, E Jiao 9g, Hua Shi 9g",
+   note:"Directly addresses fluid retention from liver compromise. Nourishes Yin while draining dampness — gentler than Zhu Ling San alone."},
+  {name:"Gui Zhi Fu Ling Wan",use:"Blood stasis — portal hypertension, liver fibrosis",
+   pat:"Fixed abdominal mass, dark complexion or spider nevi, dry scaly skin, dark menses.",
+   herbs:"Gui Zhi 9g, Fu Ling 9g, Mu Dan Pi 9g, Chi Shao 9g, Tao Ren 9g",
+   note:"⚠️ Blood-moving. Serious caution with platelets at 58. Discuss with supervising practitioner before use. Not self-prescribed."},
+  {name:"Kong Xian Dan",use:"ADHD — phlegm misting the Heart",
+   pat:"Poor concentration, forgetfulness, foggy thinking, possible visible sputum, muzzy head.",
+   herbs:"Bai Fan, Chen Sha (substitute for Zhu Sha — avoid Zhu Sha due to mercury)",
+   note:"Short-term use only. Specifically for phlegm-misting-Heart presentation of ADHD, not deficiency presentation."}
+];
+
+var HANGUL_DATA = {
+  consonants:[
+    {char:"ㄱ",rom:"g/k",name:"Giyeok"},{char:"ㄴ",rom:"n",name:"Nieun"},
+    {char:"ㄷ",rom:"d/t",name:"Digeut"},{char:"ㄹ",rom:"r/l",name:"Rieul"},
+    {char:"ㅁ",rom:"m",name:"Mieum"},{char:"ㅂ",rom:"b/p",name:"Bieup"},
+    {char:"ㅅ",rom:"s",name:"Siot"},{char:"ㅇ",rom:"silent/ng",name:"Ieung"},
+    {char:"ㅈ",rom:"j",name:"Jieut"},{char:"ㅊ",rom:"ch",name:"Chieut"},
+    {char:"ㅋ",rom:"k",name:"Kieuk"},{char:"ㅌ",rom:"t",name:"Tieut"},
+    {char:"ㅍ",rom:"p",name:"Pieup"},{char:"ㅎ",rom:"h",name:"Hieut"}
+  ],
+  vowels:[
+    {char:"ㅏ",rom:"a",name:"A — as in father"},{char:"ㅑ",rom:"ya",name:"Ya"},
+    {char:"ㅓ",rom:"eo",name:"Eo — as in ugh"},{char:"ㅕ",rom:"yeo",name:"Yeo"},
+    {char:"ㅗ",rom:"o",name:"O — as in go"},{char:"ㅛ",rom:"yo",name:"Yo"},
+    {char:"ㅜ",rom:"u",name:"U — as in you"},{char:"ㅠ",rom:"yu",name:"Yu"},
+    {char:"ㅡ",rom:"eu",name:"Eu — as in uh"},{char:"ㅣ",rom:"i",name:"I — as in see"}
+  ],
+  phrases:[
+    {kor:"안녕하세요",rom:"Annyeonghaseyo",eng:"Hello (formal)"},
+    {kor:"감사합니다",rom:"Gamsahamnida",eng:"Thank you (formal)"},
+    {kor:"괜찮아요",rom:"Gwaenchanayo",eng:"I am okay"},
+    {kor:"어디가 아프세요?",rom:"Eodiga apeusayo?",eng:"Where does it hurt?"},
+    {kor:"같이 춰요!",rom:"Gachi chwoyo!",eng:"Let us dance together!"},
+    {kor:"저는 소주 안 마셔요",rom:"Jeoneun soju an masyeoyo",eng:"I do not drink soju"},
+    {kor:"침술을 공부해요",rom:"Chimsureul gongbuhaeyo",eng:"I study acupuncture"},
+    {kor:"매일 연습해요",rom:"Maeil yeonseupaeyo",eng:"I practice every day"}
+  ]
+};
+
+// ── QUARTERS ──
+function getQuarters(){return JSON.parse(localStorage.getItem('quarters')||'[]');}
+function saveQuarters(q){localStorage.setItem('quarters',JSON.stringify(q));}
+
+function addQuarter(){
+  var name=document.getElementById('q-name').value.trim();
+  var year=document.getElementById('q-year').value;
+  if(!name)return;
+  var qs=getQuarters();
+  qs.unshift({id:Date.now(),name:name,year:year,classes:[]});
+  saveQuarters(qs);
+  document.getElementById('q-name').value='';
+  renderQuarters();updateSelects();
+}
+
+function addClass(){
+  var qid=parseInt(document.getElementById('class-quarter').value);
+  var name=document.getElementById('class-name').value.trim();
+  var grade=document.getElementById('class-grade').value;
+  if(!name||!qid)return;
+  var qs=getQuarters();
+  var q=qs.find(function(x){return x.id===qid;});
+  if(!q)return;
+  q.classes.push({id:Date.now(),name:name,grade:grade});
+  saveQuarters(qs);
+  document.getElementById('class-name').value='';
+  renderQuarters();updateSelects();
+}
+
+function updateGrade(qid,cid,grade){
+  var qs=getQuarters();
+  var q=qs.find(function(x){return x.id===qid;});
+  if(!q)return;
+  var c=q.classes.find(function(x){return x.id===cid;});
+  if(c)c.grade=grade;
+  saveQuarters(qs);
+}
+
+function deleteClass(qid,cid){
+  var qs=getQuarters();
+  var q=qs.find(function(x){return x.id===qid;});
+  if(!q)return;
+  q.classes=q.classes.filter(function(x){return x.id!==cid;});
+  saveQuarters(qs);renderQuarters();updateSelects();
+}
+
+function deleteQuarter(qid){
+  var qs=getQuarters().filter(function(x){return x.id!==qid;});
+  saveQuarters(qs);renderQuarters();updateSelects();
+}
+
+var GRADE_COLORS={
+  'A+':'#1dc994','A':'#1dc994','A-':'#12a37a',
+  'B+':'#4a9fd4','B':'#4a9fd4','B-':'#2d6fa8',
+  'C+':'#c47a1a','C':'#c47a1a',
+  'Pass':'#6c5fc7','In Progress':'#4a5a6a','':"#4a5a6a"
+};
+
+function renderQuarters(){
+  var qs=getQuarters();
+  var el=document.getElementById('quarters-list');
+  if(!qs.length){el.innerHTML='<div style="font-size:12px;color:var(--tx3);text-align:center;padding:1rem">No quarters yet — add your first one above</div>';return;}
+  el.innerHTML=qs.map(function(q){
+    var classes=q.classes.map(function(c){
+      var gc=GRADE_COLORS[c.grade]||'#4a5a6a';
+      return '<div class="class-row">'
+        +'<div class="class-name">'+c.name+'</div>'
+        +'<div style="display:flex;align-items:center;gap:.4rem">'
+        +'<select onchange="updateGrade('+q.id+','+c.id+',this.value)" style="background:var(--bg2);border:1px solid var(--bd);border-radius:6px;color:'+gc+';padding:2px 4px;font-size:11px;font-weight:700;font-family:inherit">'
+        +['','A+','A','A-','B+','B','B-','C+','C','Pass','In Progress'].map(function(g){
+          return '<option value="'+g+'"'+(c.grade===g?' selected':'')+'>'+(g||'In Progress')+'</option>';
+        }).join('')
+        +'</select>'
+        +'<button onclick="deleteClass('+q.id+','+c.id+')" style="background:none;border:none;color:var(--tx3);cursor:pointer;font-size:12px">✕</button>'
+        +'</div></div>';
+    }).join('');
+    return '<div class="quarter-card">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">'
+      +'<div class="quarter-title">'+q.name+' '+q.year+'</div>'
+      +'<button onclick="deleteQuarter('+q.id+')" style="background:none;border:none;color:var(--tx3);cursor:pointer;font-size:12px">✕</button>'
+      +'</div>'
+      +(classes||'<div style="font-size:11px;color:var(--tx3)">No classes yet — add one above</div>')
+      +'</div>';
+  }).join('');
+}
+
+function updateSelects(){
+  var qs=getQuarters();
+  var opts=qs.map(function(q){return '<option value="'+q.id+'">'+q.name+' '+q.year+'</option>';}).join('');
+  ['class-quarter','note-class'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el)el.innerHTML=opts||'<option value="">Add a quarter first</option>';
+  });
+  // note filter buttons
+  var fb=document.getElementById('note-filter-btns');
+  if(fb){
+    var all=[];
+    qs.forEach(function(q){q.classes.forEach(function(c){all.push(c.name);});});
+    fb.innerHTML=[...new Set(all)].map(function(n){
+      return '<button data-cls="'+n+'" onclick="filterNotes(this.dataset.cls,this)" style="flex-shrink:0;padding:.35rem .75rem;border-radius:20px;border:1px solid var(--bd);background:var(--card);color:var(--tx3);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">'+n+'</button>';
+    }).join('');
+  }
+}
+
+// init with Winter 2026 and AC300
+(function(){
+  var qs=getQuarters();
+  if(!qs.length){
+    qs=[{id:1,name:'Winter',year:'2026',classes:[{id:101,name:'AC300 — MOA',grade:''}]}];
+    saveQuarters(qs);
+  }
+  renderQuarters();updateSelects();
+})();
+
+// ── PDF VIEWER ──
+function openPDF(url,title){
+  document.getElementById('pdf-frame-title').textContent=title;
+  document.getElementById('pdf-frame').src=url;
+  document.getElementById('pdf-frame-wrap').classList.add('open');
+}
+
+function openLocalPDF(input){
+  var file=input.files[0];
+  if(!file)return;
+  var url=URL.createObjectURL(file);
+  openPDF(url,file.name);
+}
+
+function closePDF(){
+  document.getElementById('pdf-frame-wrap').classList.remove('open');
+  document.getElementById('pdf-frame').src='';
+}
+
+// ── NOTES ──
+var noteFilter='all';
+function saveNote(){
+  var cls=document.getElementById('note-class');
+  var text=document.getElementById('note-text').value.trim();
+  if(!text)return;
+  var className=cls.options[cls.selectedIndex]?cls.options[cls.selectedIndex].text:'General';
+  var notes=JSON.parse(localStorage.getItem('studentNotes')||'[]');
+  notes.unshift({id:Date.now(),className:className,text:text,date:new Date().toLocaleDateString()});
+  localStorage.setItem('studentNotes',JSON.stringify(notes.slice(0,500)));
+  document.getElementById('note-text').value='';
+  renderNotes();
+}
+
+function filterNotes(cls,btn){
+  noteFilter=cls;
+  document.querySelectorAll('#sec-notes button').forEach(function(b){
+    b.style.background='var(--card)';b.style.borderColor='var(--bd)';b.style.color='var(--tx3)';
+  });
+  if(btn){btn.style.background='var(--P)';btn.style.borderColor='var(--P)';btn.style.color='#fff';}
+  renderNotes();
+}
+
+function deleteNote(id){
+  var notes=JSON.parse(localStorage.getItem('studentNotes')||'[]').filter(function(n){return n.id!==id;});
+  localStorage.setItem('studentNotes',JSON.stringify(notes));renderNotes();
+}
+
+function renderNotes(){
+  var notes=JSON.parse(localStorage.getItem('studentNotes')||'[]');
+  if(noteFilter!=='all')notes=notes.filter(function(n){return n.className===noteFilter;});
+  var el=document.getElementById('notes-list');
+  if(!notes.length){el.innerHTML='<div style="font-size:12px;color:var(--tx3);text-align:center;padding:1rem">No notes yet</div>';return;}
+  el.innerHTML=notes.map(function(n){
+    return '<div class="note-entry">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center">'
+      +'<span class="note-class-tag">'+n.className+'</span>'
+      +'<div style="display:flex;align-items:center;gap:.4rem"><span class="note-date">'+n.date+'</span>'
+      +'<button onclick="deleteNote('+n.id+')" style="background:none;border:none;color:var(--tx3);cursor:pointer;font-size:12px">✕</button></div>'
+      +'</div>'
+      +'<div class="note-text">'+n.text+'</div>'
+      +'</div>';
+  }).join('');
+}
+renderNotes();
+
+// ── HERBS ──
+function renderHerbs(search){
+  var list=HERBS;
+  if(search){var s=search.toLowerCase();list=HERBS.filter(function(h){return h.name.toLowerCase().includes(s)||h.py.toLowerCase().includes(s)||h.kor.includes(s)||(h.cat&&h.cat.toLowerCase().includes(s));});}
+  var el=document.getElementById('herbs-list');
+  el.innerHTML=list.map(function(h,i){
+    return '<div class="herb-card" id="herb-'+i+'" onclick="toggleHerb('+i+')">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
+      +'<div>'
+      +'<div class="herb-name">'+h.name+'</div>'
+      +'<div class="herb-py">'+h.py+'</div>'
+      +'<div class="herb-kor">'+h.kor+'</div>'
+      +'</div>'
+      +'<span style="font-size:10px;font-weight:700;background:#2a1854;color:var(--P2);padding:2px 7px;border-radius:8px;flex-shrink:0;margin-left:.5rem">'+(h.cat||'')+'</span>'
+      +'</div>'
+      +'<div class="herb-body">'
+      +'<div style="font-size:12px;color:var(--tx2);line-height:1.6;margin-bottom:.4rem">'+h.use+'</div>'
+      +'<div style="font-size:11px;color:var(--G2);background:var(--GL);border-radius:8px;padding:.4rem .6rem;margin-bottom:.3rem"><strong>Dose:</strong> '+h.dose+'</div>'
+      +(h.ci?'<div style="font-size:11px;color:#e05555;background:#1a0808;border-radius:8px;padding:.4rem .6rem;margin-bottom:.3rem"><strong>⚠️ CI:</strong> '+h.ci+'</div>':'')
+      +(h.teach?'<div style="font-size:11px;color:var(--P2);background:#1a1030;border-radius:8px;padding:.4rem .6rem">📖 '+h.teach+'</div>':'')
+      +'</div>'
+      +'</div>';
+  }).join('');
+}
+function toggleHerb(i){
+  var el=document.getElementById('herb-'+i);
+  if(el)el.classList.toggle('open');
+}
+renderHerbs('');
+
+// ── FORMULAS ──
+(function(){
+  var el=document.getElementById('formulas-list');
+  el.innerHTML=FORMULAS.map(function(f,i){
+    return '<div class="herb-card" id="form-'+i+'" onclick="this.classList.toggle(&quot;open&quot;)">'
+      +'<div style="font-size:14px;font-weight:700;color:var(--P2)">'+f.name+'</div>'
+      +'<div style="font-size:11px;color:var(--tx3);margin-top:2px">'+f.use+'</div>'
+      +'<div class="herb-body">'
+      +'<div style="font-size:12px;color:var(--tx2);line-height:1.6;margin-bottom:.4rem"><strong>Pattern:</strong> '+f.pat+'</div>'
+      +'<div style="font-size:11px;color:var(--G2);background:var(--GL);border-radius:8px;padding:.4rem .6rem;margin-bottom:.3rem"><strong>Herbs:</strong> '+f.herbs+'</div>'
+      +(f.note?'<div style="font-size:11px;color:var(--amber);background:#1a130a;border-radius:8px;padding:.4rem .6rem">📋 '+f.note+'</div>':'')
+      +'</div>'
+      +'</div>';
+  }).join('');
+})();
+
+// ── FLASHCARDS ──
+var fcDeck=[];var fcIdx=0;var fcFlipped=false;
+
+function buildHangulDeck(){
+  var d=[];
+  HANGUL_DATA.consonants.forEach(function(c){d.push({front:c.char,frontSub:'자음 Consonant',back:c.rom,backSub:c.name});});
+  HANGUL_DATA.vowels.forEach(function(v){d.push({front:v.char,frontSub:'모음 Vowel',back:v.rom,backSub:v.name});});
+  return d;
+}
+function buildHerbDeck(){
+  return HERBS.map(function(h){return {front:h.name,frontSub:h.py+' · '+h.kor,back:h.use.substring(0,180)+'...',backSub:'Dose: '+h.dose};});
+}
+function buildFormulaDeck(){
+  return FORMULAS.map(function(f){return {front:f.name,frontSub:f.use,back:f.pat,backSub:f.herbs.substring(0,100)+'...'};});
+}
+
+function setDeck(type,btn){
+  document.querySelectorAll('#sec-flashcards .tab-bar button').forEach(function(b){b.style.background='var(--card)';b.style.borderColor='var(--bd)';b.style.color='var(--tx3)';});
+  btn.style.background='var(--P)';btn.style.borderColor='var(--P)';btn.style.color='#fff';
+  if(type==='hangul')fcDeck=buildHangulDeck();
+  else if(type==='herbs')fcDeck=buildHerbDeck();
+  else fcDeck=buildFormulaDeck();
+  fcIdx=0;fcFlipped=false;
+  document.getElementById('flashcard').classList.remove('flipped');
+  renderCard();
+}
+
+function renderCard(){
+  if(!fcDeck.length)return;
+  var card=fcDeck[fcIdx];
+  document.getElementById('fc-counter').textContent=(fcIdx+1)+' / '+fcDeck.length;
+  document.getElementById('fc-front').innerHTML='<div class="fc-label">'+card.frontSub+'</div><div class="fc-char">'+card.front+'</div><div style="font-size:11px;color:var(--tx3);margin-top:.5rem">tap to flip</div>';
+  document.getElementById('fc-back').innerHTML='<div class="fc-label" style="color:var(--G2)">Answer</div><div style="font-size:20px;font-weight:700;color:var(--G2);margin:.4rem 0">'+card.back+'</div><div style="font-size:11px;color:var(--tx3)">'+card.backSub+'</div>';
+}
+
+function flipCard(){fcFlipped=!fcFlipped;document.getElementById('flashcard').classList.toggle('flipped');}
+function nextCard(){fcIdx=(fcIdx+1)%fcDeck.length;fcFlipped=false;document.getElementById('flashcard').classList.remove('flipped');renderCard();}
+function prevCard(){fcIdx=(fcIdx-1+fcDeck.length)%fcDeck.length;fcFlipped=false;document.getElementById('flashcard').classList.remove('flipped');renderCard();}
+
+// init hangul deck
+fcDeck=buildHangulDeck();renderCard();
+
+// ── HANGUL ──
+function showHangul(type,btn){
+  document.querySelectorAll('#sec-hangul .tab-bar button').forEach(function(b){b.style.background='var(--card)';b.style.borderColor='var(--bd)';b.style.color='var(--tx3)';});
+  btn.style.background='var(--P)';btn.style.borderColor='var(--P)';btn.style.color='#fff';
+  var el=document.getElementById('hangul-content');
+  if(type==='consonants'||type==='vowels'){
+    var data=HANGUL_DATA[type];
+    el.innerHTML='<div class="hangul-grid">'+data.map(function(c){
+      return '<div class="hangul-cell"><div class="hangul-char">'+c.char+'</div><div class="hangul-rom">'+c.rom+'</div><div class="hangul-name">'+c.name+'</div></div>';
+    }).join('')+'</div>';
+  } else {
+    el.innerHTML=HANGUL_DATA.phrases.map(function(p){
+      return '<div class="phrase-card"><div class="phrase-kor">'+p.kor+'</div><div class="phrase-rom">'+p.rom+'</div><div class="phrase-eng">'+p.eng+'</div></div>';
+    }).join('');
+  }
+}
+showHangul('consonants',document.querySelector('#sec-hangul .tab-bar button'));
+
+// ── NAV ──
+function showSec(id,btn){
+  document.querySelectorAll('.sec').forEach(function(s){s.classList.remove('active');});
+  document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('sec-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// SW
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js');});
+}
+</script>
+</body>
+</html>
